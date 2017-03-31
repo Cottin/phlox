@@ -1,14 +1,16 @@
 {
   "name": "phlox",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A frontend architecture that's easy to visualize",
-  "main": "index.js",
+  "main": "lib/index.js",
   "directories": {
     "example": "examples"
   },
   "dependencies": {
     "ramda": "^0.22.1",
-    "ramda-extras": "^0.2.9",
+    "ramda-extras": "^0.2.9"
+  },
+  "peerDependencies": {
     "react": "^15.4.1"
   },
   "devDependencies": {
@@ -32,7 +34,10 @@
     "webpack-hot-middleware": "^2.6.0"
   },
   "scripts": {
-    "test": "mocha 'src/**/test*.coffee' --watch --compilers coffee:coffee-script/register"
+    "test": "mocha 'src/**/test*.coffee' --watch --compilers coffee:coffee-script/register",
+    "clean": "rimraf lib",
+    "build": "coffee -o lib/ -c src/",
+    "dist": "npm run clean && npm run build"
   },
   "repository": {
     "type": "git",

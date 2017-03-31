@@ -57,11 +57,11 @@ describe 'utils', ->
 			return 1 + res.value
 
 		it 'simple case', ->
-			vm1 = ({a}, {b}) ->
+			vm1_f = ({a}, {b}) ->
 				c: a + b
 				actions:
 					f1: ({c, d}) -> yield a + b + c + d
-			vm1.deps = ['a', 'b']
+			vm1 = {dataDeps: ['a'], stateDeps: ['b'], f: vm1_f}
 
 			res = utils.prepareViewModels {vm1}, execIter_
 			res_ = res[0].f({a: 1}, {b: 2})
@@ -95,6 +95,19 @@ describe 'utils', ->
 				l1: {paths: [['a', 'b'], []], time: 0, result: 3}
 				l2: {paths: [[], ['l1']], time: 0, result: 9}
 			deepEq expected, info
+
+		it 'nested change', ->
+			lifters = [
+				{dataDeps: ['a'], stateDeps: [], key: 'l1', f: ({a}) -> a.a1 * a.a1}
+			]
+
+			[delta, info] = utils.runLifters lifters, {a: {a1: 2}}, {}, ['a.a1']
+			deepEq {l1: 4}, delta
+			expected = 
+				l1: {paths: [['a'], []], time: 0, result: 4}
+			deepEq expected, info
+
+
 
 	describe 'runQueriers', ->
 		it 'simple case', ->

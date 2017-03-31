@@ -9,7 +9,10 @@ connect = (component, viewModelName) ->
 			phlox: object.isRequired
 
 		getInitialState: ->
-			@context.phlox.state[viewModelName] || null
+			@context.phlox.viewModelState[viewModelName] || null
+
+		# TODO:
+		# shouldComponentUpdate: ->
 
 		componentWillMount: ->
 			@_unsubscribe = @context.phlox.subscribe @changed, viewModelName
@@ -19,6 +22,9 @@ connect = (component, viewModelName) ->
 
 		changed: (newState) ->
 			@setState newState
+
+		# Do week need something like this?
+		# https://github.com/reactjs/react-redux/blob/master/src/components/connect.js#L353
 
 		render: ->
 			_ component, @state

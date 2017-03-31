@@ -1,4 +1,4 @@
-{all, assoc, contains, find, isEmpty, isNil, keys, lift, merge, union, whereEq} = require 'ramda' #auto_require:ramda
+{assoc, contains, find, isEmpty, isNil, keys, lift, merge, union, whereEq} = require 'ramda' #auto_require:ramda
 {cc, change, changedPaths, ymapObjIndexed, isThenable} = require 'ramda-extras'
 
 utils = require './utils'
@@ -14,14 +14,17 @@ class Phlox
 		@viewModelState = {}
 		@queriersState = {}
 
+		@__lifters = lifters
+		@__viewModels = viewModels
+		@__queriers = queriers
+
 		@lifters = utils.prepareLifters lifters
 		@viewModels = utils.prepareViewModels viewModels, @execIter
 		@queriers = utils.prepareQueriers queriers
 		@invokers = utils.prepareInvokers invokers
 
-		console.log 'LOAD INITIAL DATA'
-		@forcedQueriers = keys queriers # force all querys at initial startup
-		@change initialData # load initial data
+	  # Load initial data and force queriers to get some data at start-up
+		@change initialData, {label: 'LOAD INITIAL DATA'}, {queriers: true}
 
 		@listeners = []
 
@@ -41,7 +44,7 @@ class Phlox
 		return () =>
 			@listeners = @listeners.filter ({listener: l}) -> l != listener
 
-	change: (delta, {label, meta} = {}) =>
+	change: (delta, {label, meta} = {}, forced = undefined) =>
 		dataPaths = changedPaths delta
 		args = ['CHANGE']
 		if label then args.push label
@@ -53,15 +56,16 @@ class Phlox
 		console.groupEnd()
 
 		@data = change delta, @data
-		statePaths = @lift dataPaths
+		statePaths = @lift dataPaths, forced
 
 		# leave time for render if needed
-		window.setTimeout @query(dataPaths, statePaths), 0
+		window.setTimeout @query(dataPaths, statePaths, forced), 0
 
-	lift: (dataPaths) =>
+	lift: (dataPaths, forced = {}) =>
 
 		lift0 = performance.now()
-		[delta_l, info_l] = utils.runLifters @lifters, @data, @state, dataPaths
+		[delta_l, info_l] = utils.runLifters @lifters, @data, @state, dataPaths,
+		forced['lifters']
 		statePaths = keys delta_l
 		@state = merge @state, delta_l
 		liftTime = performance.now() - lift0
@@ -69,7 +73,7 @@ class Phlox
 
 		vm0 = performance.now()
 		[delta_vm, info_vm] = utils.runViewModels @viewModels, @data, @state,
-		dataPaths, statePaths
+		dataPaths, statePaths, forced['viewModels']
 		@viewModelState = merge @viewModelState, delta_vm
 		vmTime = performance.now() - vm0
 		vmTime_ = parseFloat(vmTime).toFixed(2)
@@ -90,18 +94,18 @@ class Phlox
 
 		return statePaths
 
-	query: (dataPaths, statePaths) => () =>
+	query: (dataPaths, statePaths, forced = {}) => () =>
 		queriers0 = performance.now()
 		[delta_q, info_q] = utils.runQueriers @queriers, @data, @state,
-		dataPaths, statePaths, @forcedQueriers
-		@forcedQueriers = []
+		dataPaths, statePaths, forced['queriers']
+		@forceQueriers = false
 		@queriersState = merge @queriersState, delta_q
 		queriersTime = performance.now() - queriers0
 		queriersTime_ = parseFloat(queriersTime).toFixed(2)
 
 		invokers0 = performance.now()
 		[delta_i, info_i] = utils.runInvokers @invokers, @data, @state,
-		dataPaths, statePaths
+		dataPaths, statePaths, forced['invokers']
 		invokersTime = performance.now() - invokers0
 		invokersTime_ = parseFloat(invokersTime).toFixed(2)
 
@@ -155,5 +159,35 @@ class Phlox
 	exec: (query, caller) => @parser.exec query, caller
 	execIter: (iterable, caller) => @parser.execIter iterable, caller
 
+	# TODO: reinitialize parser?
+	reinitialize: ({lifters, viewModels, queriers, invokers}) =>
+		liftersChanged = @__lifters != lifters
+		viewModelsChanged = @__viewModels != viewModels
+		queriersChanged = @__queriers != queriers
+		invokersChanged = @__invokers != invokers
+
+		if liftersChanged
+			@__lifters = lifters
+			@lifters = utils.prepareLifters lifters
+
+		if viewModelsChanged
+			@__viewModels = viewModels
+			@viewModels = utils.prepareViewModels viewModels, @execIter
+
+		if queriersChanged
+			@__queriers = queriers
+			@queriers = utils.prepareQueriers queriers
+
+		if invokersChanged
+			@__invokers = invokers
+			@invokers = utils.prepareInvokers invokers
+
+		forced =
+			lifters: liftersChanged
+			viewModels: viewModelsChanged
+			queriers: queriersChanged
+			invokers: invokersChanged
+
+		@change {}, {label: 'RE-INITIALIZE'}, forced
 
 module.exports = Phlox

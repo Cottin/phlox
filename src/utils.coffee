@@ -2,11 +2,16 @@
 {ymapObjIndexed, cc} = require 'ramda-extras'
 
 # s, s -> b
-# Returns true if x is y or if x starts with y
+# Returns true if x is y or if x starts with y or if y starts with x
 # eg. _sameDep 'a', 'a' -> true
 #			_sameDep 'a.b.c.d', 'a' -> true
+#			_sameDep 'a', 'a.b.c.d' -> true
 _sameDep = (x, y) ->
-	test new RegExp("#{y}\.?"), x
+	if x == y then true
+	else if test new RegExp("^#{y}\."), x then true
+	else if test new RegExp("^#{x}\."), y then true
+	else false
+
 
 # o -> [o]
 # Takes an object of semi-prepared lifters and sorts them in dependency order.
@@ -20,7 +25,8 @@ prepareLifters = (lifters) ->
 		if left.length == 0 then return res
 		else if left.length == lastCount
 			# if we did one pass without any lifters getting resolved => circular dep
-			throw new Error 'You have a circular dependency in your lifters'
+			console.error 'Either you have a circular dependency in one or more lifters or a lifter is dependent on another lifter that does not exist. Lifters left to resolve:', left
+			throw new Error 'Could not resolve lifters'
 		lastCount = left.length
 
 		for k in left
@@ -81,7 +87,7 @@ _affectedDeps = (item, dataPaths, statePaths) ->
 # Returns a tuple [delta, info] where delta is a map of the lifters that were
 # executed and what they returned and where info contains more info to debug,
 # analyze and optimize the lifters.
-runLifters = (lifters, data, state, dataPaths) ->
+runLifters = (lifters, data, state, dataPaths, isForced) ->
 	delta = {}
 	info = {}
 	state_ = state
@@ -92,7 +98,7 @@ runLifters = (lifters, data, state, dataPaths) ->
 	for l in lifters
 		l0 = performance.now()
 		[dataDeps, stateDeps] = _affectedDeps l, dataPaths, statePaths
-		if isEmpty(dataDeps) && isEmpty(stateDeps) then continue
+		if isEmpty(dataDeps) && isEmpty(stateDeps) && !isForced then continue
 
 		res = l.f data, state_
 		delta[l.key] = res
@@ -101,25 +107,25 @@ runLifters = (lifters, data, state, dataPaths) ->
 
 		time = performance.now() - l0
 		info[l.key] = {time, paths: [dataDeps, stateDeps], result: res}
+		if isForced then info[l.key].wasForced = true
 
 	return [delta, info]
 
 # Runs the "items" and returns a tuple [delta, info] like runLifters
-_runItems = (items, data, state, dataPaths, statePaths, forced = []) ->
+_runItems = (items, data, state, dataPaths, statePaths, isForced) ->
 	delta = {}
 	info = {}
 	for i in items
 		i0 = performance.now()
 		[dataDeps, stateDeps] = _affectedDeps i, dataPaths, statePaths
-		wasForced = contains i.key, forced
-		if isEmpty(dataDeps) && isEmpty(stateDeps) && !wasForced then continue
+		if isEmpty(dataDeps) && isEmpty(stateDeps) && !isForced then continue
 
 		res = i.f data, state
 		delta[i.key] = res
 		time = performance.now() - i0
 		info[i.key] = {time, dataPaths: dataDeps, statePaths: stateDeps,
 		result: res}
-		if wasForced then info[i.key].wasForced = true
+		if isForced then info[i.key].wasForced = true
 
 	return [delta, info]
 
