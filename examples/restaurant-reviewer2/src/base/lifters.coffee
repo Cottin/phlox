@@ -19,6 +19,7 @@ denormWithMappning = curry (data, mappings, o) ->
 
 
 restaurantsSorted = ({ui: {sortBy}, restaurants}, {reviewItems}) ->
+	if isNil reviewItems then return []
 	restaurants_ = ymapObjIndexed restaurants, (v, k) ->
 		rs = cc filter(whereEq({restaurant: parseInt(k)})), values, reviewItems
 		stars = pluck 'stars', rs
@@ -40,6 +41,7 @@ selectedRestaurant = ({ui: {selected}}, {restaurantsSorted}) ->
 
 
 reviewItems = ({reviews}, {}) ->
+	if isNil reviews then return []
 	colors = ['#DAC48D', '#8DDA91', '#D78DDA', '#8DCEDA', '#F28E8E']
 	ymap reviews, (r) ->
 		user =
