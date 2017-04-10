@@ -61,6 +61,21 @@ class Phlox
 		# leave time for render if needed
 		window.setTimeout @query(dataPaths, statePaths, forced), 0
 
+	reset: (data = {}) =>
+		currentKeys = keys @data
+		changedKeys = union currentKeys, keys(data)
+		@data = data
+
+		console.groupCollapsed 'RESET', changedKeys
+		console.log data
+		console.groupEnd()
+
+		statePaths = @lift changedKeys
+
+		# leave time for render if needed
+		window.setTimeout @query(changedKeys, statePaths), 0
+
+
 	lift: (dataPaths, forced = {}) =>
 
 		lift0 = performance.now()
