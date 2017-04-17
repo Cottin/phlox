@@ -15,7 +15,10 @@ initialData =
 	ui: {sortBy: 'name'}
 	sync: {}
 
-onQuery = (query, caller) -> parser.exec query, caller
+onQuery = (query, key) ->
+	parser.exec(query).then (data) ->
+		phlox.change {"#{key}": {$assoc: data}}, {label: "QUERIER_RESULT #{key}"}
+			
 onAction = (iter, caller) -> parser.execIter iter, caller
 
 phlox = new Phlox {viewModels, queriers, parser, lifters, onQuery, onAction, initialData}

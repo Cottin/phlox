@@ -141,12 +141,12 @@ class Phlox
 
 	execQueries: (queriers, invokers) =>
 		ymapObjIndexed queriers, (q, k) =>
-			res = @exec(q)
-			if isThenable res
-				res.then (data) =>
-					@change {"#{k}": {$assoc: data}}, {label: "QUERIER_RESULT #{k}"}
-			else
-				@change {"#{k}": {$assoc: data}}, {label: "QUERIER_RESULT #{k}"}
+			res = @exec q, k
+			# if isThenable res
+			# 	res.then (data) =>
+			# 		@change {"#{k}": {$assoc: data}}, {label: "QUERIER_RESULT #{k}"}
+			# else
+			# 	@change {"#{k}": {$assoc: data}}, {label: "QUERIER_RESULT #{k}"}
 
 		# TODO: execute invokers
 
@@ -176,7 +176,7 @@ class Phlox
 	# todo: remove commented out code if this works ok
 	# exec: (query, caller) => @parser.exec query, caller
 	# execIter: (iterable, caller) => @parser.execIter iterable, caller
-	exec: (query, caller) => @onQuery query, caller
+	exec: (query, key) => @onQuery query, key
 	execIter: (iterable, caller) => @onAction iterable, caller
 
 	# TODO: reinitialize parser?
