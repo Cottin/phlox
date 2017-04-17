@@ -1,4 +1,4 @@
-{assoc, contains, find, isEmpty, isNil, keys, lift, merge, union, whereEq} = require 'ramda' #auto_require:ramda
+{assoc, contains, find, isEmpty, isNil, keys, lift, merge, remove, union, whereEq} = require 'ramda' #auto_require:ramda
 {cc, change, changedPaths, ymapObjIndexed, isThenable} = require 'ramda-extras'
 
 utils = require './utils'
@@ -173,6 +173,7 @@ class Phlox
 
 	forceQuery: (key) => @forcedQueriers = union @forcedQueriers, [key]
 
+	# todo: remove commented out code if this works ok
 	# exec: (query, caller) => @parser.exec query, caller
 	# execIter: (iterable, caller) => @parser.execIter iterable, caller
 	exec: (query, caller) => @onQuery query, caller
