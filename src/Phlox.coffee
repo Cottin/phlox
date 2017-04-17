@@ -4,12 +4,15 @@
 utils = require './utils'
 
 class Phlox
-	constructor: ({lifters, viewModels, queriers, invokers, initialData}) ->
+	constructor: ({lifters, viewModels, queriers, invokers, onQuery, onAction, initialData}) ->
 		@data = {}
 		@state = {}
 		# @state = {queriers: null, lifters: null, viewModels: null}
 		@log = []
 		@changedViewModels = []
+
+		@onQuery = onQuery
+		@onAction = onAction
 
 		@viewModelState = {}
 		@queriersState = {}
@@ -170,9 +173,10 @@ class Phlox
 
 	forceQuery: (key) => @forcedQueriers = union @forcedQueriers, [key]
 
-	# only for development help?
-	exec: (query, caller) => @parser.exec query, caller
-	execIter: (iterable, caller) => @parser.execIter iterable, caller
+	# exec: (query, caller) => @parser.exec query, caller
+	# execIter: (iterable, caller) => @parser.execIter iterable, caller
+	exec: (query, caller) => @onQuery query, caller
+	execIter: (iterable, caller) => @onAction iterable, caller
 
 	# TODO: reinitialize parser?
 	reinitialize: ({lifters, viewModels, queriers, invokers}) =>

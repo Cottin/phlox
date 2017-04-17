@@ -15,10 +15,12 @@ initialData =
 	ui: {sortBy: 'name'}
 	sync: {}
 
-phlox = new Phlox {viewModels, queriers, parser, lifters, initialData}
+onQuery = (query, caller) -> parser.exec query, caller
+onAction = (iter, caller) -> parser.execIter iter, caller
+
+phlox = new Phlox {viewModels, queriers, parser, lifters, onQuery, onAction, initialData}
 parser = new Pawpaw createTree(phlox)
 parser.logLevel = 999
-phlox.parser = parser
 
 window.app = phlox
 
