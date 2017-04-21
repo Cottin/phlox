@@ -1,4 +1,5 @@
-{createClass, createElement: _, PropTypes: {object}} = require 'react'
+{createClass, createElement: _} = require 'react'
+{object} = require 'prop-types'
 {} = require 'ramda' #auto_require:ramda
 
 connect = (component, viewModelName) ->

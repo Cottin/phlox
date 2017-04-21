@@ -1,12 +1,13 @@
 {
   "name": "phlox",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "A frontend architecture that's easy to visualize",
   "main": "lib/index.js",
   "directories": {
     "example": "examples"
   },
   "dependencies": {
+    "prop-types": "^15.5.8",
     "ramda": "^0.22.1",
     "ramda-extras": "^0.2.9"
   },
