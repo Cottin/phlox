@@ -1,3 +1,5 @@
+require 'whatwg-fetch'
+
 React = require 'react'
 ReactDOM = require 'react-dom'
 Pawpaw = require 'pawpaw'

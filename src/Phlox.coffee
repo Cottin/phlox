@@ -1,4 +1,4 @@
-{assoc, contains, find, isEmpty, isNil, keys, lift, merge, remove, union, whereEq} = require 'ramda' #auto_require:ramda
+{assoc, contains, find, isEmpty, isNil, join, keys, lift, merge, remove, union, whereEq} = require 'ramda' #auto_require:ramda
 {cc, change, changedPaths, ymapObjIndexed, isThenable} = require 'ramda-extras'
 
 utils = require './utils'
@@ -49,12 +49,11 @@ class Phlox
 
 	change: (delta, {label, meta} = {}, forced = undefined) =>
 		dataPaths = changedPaths delta
-		args = ['CHANGE']
-		if label then args.push label
-		args.push dataPaths
-		if meta then args.push meta
+		msg = "CHANGE: #{join(',', dataPaths)}"
+		if label then msg += " (label: #{label})"
+		if meta then msg += "(meta: #{meta})"
 
-		console.groupCollapsed.apply undefined, args
+		console.groupCollapsed msg
 		console.log delta
 		console.groupEnd()
 

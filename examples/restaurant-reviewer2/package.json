@@ -55,6 +55,7 @@
     "ramda-extras": "^0.2.11",
     "react": "^15.4.0",
     "react-addons-pure-render-mixin": "^15.4.0",
-    "react-dom": "^15.4.0"
+    "react-dom": "^15.4.0",
+    "whatwg-fetch": "^2.0.3"
   }
 }
