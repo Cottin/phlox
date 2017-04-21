@@ -1,9 +1,10 @@
-{createClass, createElement: _} = require 'react'
+{createElement: _} = require 'react'
+createReactClass = require 'create-react-class'
 {object} = require 'prop-types'
 {} = require 'ramda' #auto_require:ramda
 
 connect = (component, viewModelName) ->
-	createClass
+	createReactClass
 		displayName: "Connect(#{getDisplayName(component)})"
 
 		contextTypes:

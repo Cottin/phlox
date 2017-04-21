@@ -1,7 +1,8 @@
-{Children, createClass} = require 'react'
+{Children} = require 'react'
+createReactClass = require 'create-react-class'
 {object} = require 'prop-types'
 
-PhloxProvider = createClass
+PhloxProvider = createReactClass
 	displayName: 'PhloxProvider'
 
 	propTypes:
