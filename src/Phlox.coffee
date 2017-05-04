@@ -170,6 +170,16 @@ class Phlox
 		if renderTime > 16 then console.warn message
 		else console.log message
 
+	renderAll: =>
+		render0 = performance.now()
+		for l in @listeners
+			l.listener @viewModelState[l.name]
+		renderTime = performance.now() - render0
+
+		message = "RENDER #{parseFloat(renderTime).toFixed(2)}ms"
+		if renderTime > 16 then console.warn message
+		else console.log message
+
 	forceQuery: (key) => @forcedQueriers = union @forcedQueriers, [key]
 
 	# todo: remove commented out code if this works ok
@@ -208,5 +218,10 @@ class Phlox
 			invokers: invokersChanged
 
 		@change {}, {label: 'RE-INITIALIZE'}, forced
+
+	mock: ({viewModels}) ->
+		@viewModelState = viewModels
+		@renderAll()
+
 
 module.exports = Phlox
