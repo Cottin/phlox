@@ -186,7 +186,7 @@ class Phlox
 	# exec: (query, caller) => @parser.exec query, caller
 	# execIter: (iterable, caller) => @parser.execIter iterable, caller
 	exec: (query, key) => @onQuery query, key
-	execIter: (action, arguments, meta) => @onAction action, arguments, meta
+	execIter: (action, args, meta) => @onAction action, args, meta
 
 	# TODO: reinitialize parser?
 	reinitialize: ({lifters, viewModels, queriers, invokers}) =>
