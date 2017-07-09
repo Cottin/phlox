@@ -59,7 +59,7 @@ prepareViewModels = (vms, execIter) ->
 
 	prepareAction = (vmKey) -> (action, actionKey) ->
 		f = ->
-			execIter action, arguments, {name: "#{vmKey}.#{actionKey}"}
+			execIter action, arguments, "#{vmKey}.#{actionKey}"
 			# caller gives error in safari when strict mode.. commenting out for now
 			# if f.caller
 			# 	console.log 'caller', f.caller
