@@ -138,6 +138,8 @@ class Phlox
 
 		@execQueries(delta_q, delta_i)
 
+		@_dev_stateChanged?({state: @state, viewModels: @viewModelState, queriers: @queriersState})
+
 	execQueries: (queriers, invokers) =>
 		ymapObjIndexed queriers, (q, k) =>
 			res = @exec q, k
