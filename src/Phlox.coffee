@@ -58,7 +58,10 @@ class Phlox
 		console.groupEnd()
 
 		@data = change delta, @data
+		@_dev_stateChanged?({data: @data, state: @state, viewModels: @viewModelState, queriers: @queriersState})
+		
 		statePaths = @lift dataPaths, forced
+
 
 		# leave time for render if needed
 		window.setTimeout @query(dataPaths, statePaths, forced), 0
