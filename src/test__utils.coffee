@@ -129,14 +129,17 @@ describe 'utils', ->
 
 		it 'forced', ->
 			queriers = [
-				{dataDeps: ['a', 'b'], stateDeps: [], key: 'q1',
-				f: ({a, b}) -> [a, b]}
+				{dataDeps: ['a', 'b'], stateDeps: [], key: 'q1', f: ({a, b}) -> [a, b]},
+				{dataDeps: [], stateDeps: [], key: 'q2', f: ({}) -> [1, 2]},
+				{dataDeps: [], stateDeps: [], key: 'q3', f: ({}) -> [3, 4]},
 			]
 
 			[delta, info] = utils.runQueriers queriers, {a: 1, b: 2}, {l1: 3},
-			[], [], ['q1']
+			[], [], ['q1', 'q3']
 			expected =
 				q1: {dataPaths: [], statePaths: [], time: 0, result: [1, 2],
+				wasForced: true}
+				q3: {dataPaths: [], statePaths: [], time: 0, result: [3, 4],
 				wasForced: true}
 
 			deepEq expected, info

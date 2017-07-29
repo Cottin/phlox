@@ -1,4 +1,4 @@
-{assoc, contains, find, isEmpty, isNil, join, keys, lift, merge, remove, union, whereEq} = require 'ramda' #auto_require:ramda
+{assoc, contains, filter, find, isEmpty, isNil, join, keys, lift, map, merge, prop, remove, union, whereEq, without} = require 'ramda' #auto_require:ramda
 {cc, change, changedPaths, ymapObjIndexed, isThenable} = require 'ramda-extras'
 
 utils = require './utils'
@@ -26,8 +26,12 @@ class Phlox
 		@queriers = utils.prepareQueriers queriers
 		@invokers = utils.prepareInvokers invokers
 
-	  # Load initial data and force queriers to get some data at start-up
-		@change initialData, {label: 'LOAD INITIAL DATA'}, {queriers: true}
+		qHasNoDep = ({dataDeps, stateDeps}) ->
+			isEmpty(dataDeps) && isEmpty(stateDeps)
+		qsToForce = cc map(prop('key')), filter(qHasNoDep), @queriers
+
+		# Load initial data and force queriers without dependencies
+		@change initialData, {label: 'LOAD INITIAL DATA'}, {queriers: qsToForce}
 
 		@listeners = []
 

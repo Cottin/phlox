@@ -1,4 +1,4 @@
-{any, contains, difference, differenceWith, evolve, has, intersectionWith, into, isEmpty, keys, map, mapObjIndexed, merge, test, toPairs, union, update, where, without} = require 'ramda' #auto_require:ramda
+{any, contains, difference, differenceWith, evolve, has, intersectionWith, into, isEmpty, isNil, keys, map, mapObjIndexed, merge, test, toPairs, union, update, where, without} = require 'ramda' #auto_require:ramda
 {ymapObjIndexed, cc} = require 'ramda-extras'
 
 # s, s -> b
@@ -90,7 +90,7 @@ _affectedDeps = (item, dataPaths, statePaths) ->
 # Returns a tuple [delta, info] where delta is a map of the lifters that were
 # executed and what they returned and where info contains more info to debug,
 # analyze and optimize the lifters.
-runLifters = (lifters, data, state, dataPaths, isForced) ->
+runLifters = (lifters, data, state, dataPaths, forcedItems) ->
 	delta = {}
 	info = {}
 	state_ = state
@@ -101,7 +101,9 @@ runLifters = (lifters, data, state, dataPaths, isForced) ->
 	for l in lifters
 		l0 = performance.now()
 		[dataDeps, stateDeps] = _affectedDeps l, dataPaths, statePaths
-		if isEmpty(dataDeps) && isEmpty(stateDeps) && !isForced then continue
+		if isEmpty(dataDeps) && isEmpty(stateDeps)
+			if isNil(forcedItems) then continue
+			else if ! contains i.key, forcedItems then continue
 
 		res = l.f data, state_
 		delta[l.key] = res
@@ -110,25 +112,27 @@ runLifters = (lifters, data, state, dataPaths, isForced) ->
 
 		time = performance.now() - l0
 		info[l.key] = {time, paths: [dataDeps, stateDeps], result: res}
-		if isForced then info[l.key].wasForced = true
+		if forcedItems then info[l.key].wasForced = true
 
 	return [delta, info]
 
 # Runs the "items" and returns a tuple [delta, info] like runLifters
-_runItems = (items, data, state, dataPaths, statePaths, isForced) ->
+_runItems = (items, data, state, dataPaths, statePaths, forcedItems) ->
 	delta = {}
 	info = {}
 	for i in items
 		i0 = performance.now()
 		[dataDeps, stateDeps] = _affectedDeps i, dataPaths, statePaths
-		if isEmpty(dataDeps) && isEmpty(stateDeps) && !isForced then continue
+		if isEmpty(dataDeps) && isEmpty(stateDeps)
+			if isNil(forcedItems) then continue
+			else if ! contains i.key, forcedItems then continue
 
 		res = i.f data, state
 		delta[i.key] = res
 		time = performance.now() - i0
 		info[i.key] = {time, dataPaths: dataDeps, statePaths: stateDeps,
 		result: res}
-		if isForced then info[i.key].wasForced = true
+		if forcedItems then info[i.key].wasForced = true
 
 	return [delta, info]
 
