@@ -4,13 +4,23 @@ assert = require 'assert'
 utils = require './utils'
 
 eq = flip assert.equal
-deepEq = flip assert.deepEqual
+deepEq = flip assert.deepStrictEqual
 throws = (f) -> assert.throws f, Error
 
 # mock for performance in node when running mocha
 global.performance = {now: -> Date.now()}
 
 describe 'utils', ->
+	describe 'sameDep', ->
+		it 'same', ->
+			eq true, utils.sameDep 'a', 'a'
+		it 'simple', ->
+			eq true, utils.sameDep 'a.b.c.d', 'a'
+			eq true, utils.sameDep 'a', 'a.b.c.d'
+		it 'harder', ->
+			eq false, utils.sameDep 'member', 'members'
+		it 'harder 2', ->
+			eq false, utils.sameDep 'member.test', 'members.test'
 
 	describe 'prepareLifters', ->
 		data = {a: 1, b: 2, c: 'three', d: {d1: 4}}

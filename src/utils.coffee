@@ -1,15 +1,15 @@
-{any, contains, difference, differenceWith, evolve, has, intersectionWith, into, isEmpty, isNil, keys, map, mapObjIndexed, merge, test, toPairs, union, update, where, without} = require 'ramda' #auto_require:ramda
+{any, contains, difference, differenceWith, evolve, has, intersectionWith, into, isEmpty, isNil, keys, map, mapObjIndexed, merge, none, test, toPairs, union, update, where, without} = require 'ramda' #auto_require:ramda
 {ymapObjIndexed, cc} = require 'ramda-extras'
 
 # s, s -> b
 # Returns true if x is y or if x starts with y or if y starts with x
-# eg. _sameDep 'a', 'a' -> true
-#			_sameDep 'a.b.c.d', 'a' -> true
-#			_sameDep 'a', 'a.b.c.d' -> true
-_sameDep = (x, y) ->
+# eg. sameDep 'a', 'a' -> true
+#			sameDep 'a.b.c.d', 'a' -> true
+#			sameDep 'a', 'a.b.c.d' -> true
+sameDep = (x, y) ->
 	if x == y then true
-	else if test new RegExp("^#{y}\."), x then true
-	else if test new RegExp("^#{x}\."), y then true
+	else if test new RegExp("^#{y}\\."), x then true
+	else if test new RegExp("^#{x}\\."), y then true
 	else false
 
 
@@ -32,7 +32,7 @@ prepareLifters = (lifters) ->
 		for k in left
 			{f, dataDeps, stateDeps} = lifters[k]
 			noStateDeps = isEmpty stateDeps
-			allStateDepsResolved = isEmpty differenceWith(_sameDep, stateDeps, done)
+			allStateDepsResolved = isEmpty differenceWith(sameDep, stateDeps, done)
 			if noStateDeps || allStateDepsResolved
 				res.push {f, dataDeps, stateDeps, key: k}
 				done.push k
@@ -82,8 +82,8 @@ prepareViewModels = (vms, execIter) ->
 # Returns a list of dependencies of item that is found in dataPaths and
 # statePaths
 _affectedDeps = (item, dataPaths, statePaths) ->
-	dataPaths_ = intersectionWith _sameDep, item.dataDeps, dataPaths
-	statePaths_ = intersectionWith _sameDep, item.stateDeps, statePaths
+	dataPaths_ = intersectionWith sameDep, item.dataDeps, dataPaths
+	statePaths_ = intersectionWith sameDep, item.stateDeps, statePaths
 	return [dataPaths_, statePaths_]
 
 # Runs the lifters with supplied data paths that changed.
@@ -142,6 +142,5 @@ runInvokers = _runItems
 runViewModels = _runItems
 
 
-module.exports = {prepareLifters, prepareViewModels, prepareQueriers, prepareInvokers, runLifters, runQueriers, runInvokers, runViewModels}
-
-	
+#auto_export:none_
+module.exports = {sameDep, prepareLifters, prepareQueriers, prepareInvokers, prepareViewModels, runLifters, runQueriers, runInvokers, runViewModels}
