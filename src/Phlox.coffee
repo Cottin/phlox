@@ -26,12 +26,15 @@ class Phlox
 		@queriers = utils.prepareQueriers queriers
 		@invokers = utils.prepareInvokers invokers
 
-		qHasNoDep = ({dataDeps, stateDeps}) ->
+		hasNoDep = ({dataDeps, stateDeps}) ->
 			isEmpty(dataDeps) && isEmpty(stateDeps)
-		qsToForce = cc map(prop('key')), filter(qHasNoDep), @queriers
 
-		# Load initial data and force queriers without dependencies
-		@change initialData, {label: 'LOAD INITIAL DATA'}, {queriers: qsToForce}
+		forced =
+			queriers: cc map(prop('key')), filter(hasNoDep), @queriers
+			invokers: cc map(prop('key')), filter(hasNoDep), @invokers
+
+		# Load initial data and force queriers and invokers without dependencies
+		@change initialData, {label: 'LOAD INITIAL DATA'}, forced
 
 		@listeners = []
 
@@ -143,13 +146,20 @@ class Phlox
 			console.log info_i
 			console.groupEnd()
 
-		@execQueries(delta_q, delta_i)
+		@execQueries delta_q
+		@execInvokers delta_i
 
 		@_dev_stateChanged?({data: @data, state: @state, viewModels: @viewModelState, queriers: @queriersState})
 
-	execQueries: (queriers, invokers) =>
+	execQueries: (queriers) =>
 		ymapObjIndexed queriers, (q, k) =>
-			res = @exec q, k
+			res = @exec q, k, false
+
+	execInvokers: (invokers) =>
+		ymapObjIndexed invokers, (i, k) =>
+			if ! isNil i 
+				res = @exec i, k, true
+
 			# if isThenable res
 			# 	res.then (data) =>
 			# 		@change {"#{k}": {$assoc: data}}, {label: "QUERIER_RESULT #{k}"}
@@ -194,7 +204,7 @@ class Phlox
 	# todo: remove commented out code if this works ok
 	# exec: (query, caller) => @parser.exec query, caller
 	# execIter: (iterable, caller) => @parser.execIter iterable, caller
-	exec: (query, key) => @onQuery query, key
+	exec: (query, key, isInvoker) => @onQuery query, key, isInvoker
 	execIter: (action, args, meta) => @onAction action, args, meta
 
 	# TODO: reinitialize parser?

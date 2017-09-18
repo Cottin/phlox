@@ -7,6 +7,7 @@ Pawpaw = require 'pawpaw'
 
 viewModels = require './base/viewModels'
 queriers = require './base/queriers'
+invokers = require './base/invokers'
 lifters = require './base/lifters'
 createTree = require './base/parser'
 require './style.css'
@@ -14,16 +15,20 @@ App = React.createFactory require('./App')
 
 
 initialData =
-	ui: {sortBy: 'name'}
+	ui: {sortBy: 'name', selected: null}
 	sync: {}
 
-onQuery = (query, key) ->
-	parser.exec(query).then (data) ->
-		phlox.change {"#{key}": {$assoc: data}}, {label: "QUERIER_RESULT #{key}"}
+onQuery = (query, key, isInvoker) ->
+	if isInvoker
+		res = parser.exec(query)
+
+	else
+		parser.exec(query).then (data) ->
+			phlox.change {"#{key}": {$assoc: data}}, {label: "QUERIER_RESULT #{key}"}
 
 onAction = (iter, caller) -> parser.execIter iter, caller
 
-phlox = new Phlox {viewModels, queriers, parser, lifters, onQuery, onAction, initialData}
+phlox = new Phlox {viewModels, queriers, invokers, parser, lifters, onQuery, onAction, initialData}
 phlox._dev_stateChanged = (data) -> console.log '_dev_stateChanged', data
 
 parser = new Pawpaw createTree(phlox)
