@@ -3,6 +3,7 @@
 {RestaurantView_} = require './views/RestaurantView'
 {RestaurantEditView_} = require './views/RestaurantEditView'
 {ReviewEditView_} = require './views/ReviewEditView'
+{DateView_} = require './views/DateView'
 {PhloxProvider} = require 'phlox'
 
 
@@ -15,6 +16,7 @@ App = React.createClass
 					_ RestaurantView_
 					# _ RestaurantEditView_
 					_ ReviewEditView_
+					_ DateView_
 
 module.exports = App
 

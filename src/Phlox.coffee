@@ -1,5 +1,5 @@
 {contains, filter, find, isEmpty, isNil, join, keys, lift, map, merge, prop, union, whereEq} = require 'ramda' #auto_require:ramda
-{change, cc, changedPaths, fmapObjIndexed} = require 'ramda-extras' #auto_require:ramda-extras
+{change, cc, changedPaths, fmapObjIndexed, freduce} = require 'ramda-extras' #auto_require:ramda-extras
 
 utils = require './utils'
 
@@ -28,6 +28,13 @@ class Phlox
 
 		hasNoDep = ({dataDeps, stateDeps}) ->
 			isEmpty(dataDeps) && isEmpty(stateDeps)
+
+		# VMs with no deps are executed directly and part of the initial state
+		vmInitState = freduce @viewModels, {}, (mem, vm) ->
+			if hasNoDep vm then merge mem, {"#{vm.key}": vm.f()}
+			else mem
+
+		@viewModelState = vmInitState
 
 		forced =
 			queriers: cc map(prop('key')), filter(hasNoDep), @queriers

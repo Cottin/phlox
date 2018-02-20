@@ -26,6 +26,10 @@ ReviewEditView_ = ({reviewToEdit}, {selectedRestaurant}) ->
 			yield {Review: 'create', data: review}
 			yield {Write: {reviewToEdit: null}}
 		change: (delta) -> yield {Write: {reviewToEdit: delta}}
+
+# only here to make sure you get data from a vm that has no dependencies
+DateView_ = ({}, {}) ->
+	return {date: new Date().toJSON().slice(0,10)}
 	
 
 #auto_export:phlox
@@ -33,5 +37,6 @@ module.exports = {
 	RestaurantListView_: {dataDeps: ['ui.sortBy'], stateDeps: ['restaurantsSorted'], f: RestaurantListView_},
 	RestaurantView_: {dataDeps: [], stateDeps: ['selectedRestaurant'], f: RestaurantView_},
 	RestaurantEditView_: {dataDeps: [], stateDeps: ['selectedRestaurant'], f: RestaurantEditView_},
-	ReviewEditView_: {dataDeps: ['reviewToEdit'], stateDeps: ['selectedRestaurant'], f: ReviewEditView_}
+	ReviewEditView_: {dataDeps: ['reviewToEdit'], stateDeps: ['selectedRestaurant'], f: ReviewEditView_},
+	DateView_: {dataDeps: [], stateDeps: [], f: DateView_}
 }
