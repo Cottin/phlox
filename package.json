@@ -1,6 +1,6 @@
 {
   "name": "phlox",
-  "version": "0.1.17",
+  "version": "0.1.18",
   "description": "A frontend architecture that's easy to visualize",
   "main": "lib/index.js",
   "directories": {
@@ -9,8 +9,8 @@
   "dependencies": {
     "create-react-class": "^15.5.2",
     "prop-types": "^15.5.8",
-    "ramda": "^0.22.1",
-    "ramda-extras": "^0.2.9"
+    "ramda": "^0.25.0",
+    "ramda-extras": "^0.2.19"
   },
   "peerDependencies": {
     "react": "^15.4.1"

@@ -1,9 +1,8 @@
 {DOM: {div, a}, createElement: _} = React = require 'react'
 PureRenderMixin = require 'react-addons-pure-render-mixin'
 {connect} = require 'phlox'
-{ymapObjIndexed, ymap} = require 'ramda-extras'
-{add, isNil, map, range, test} = require 'ramda' #auto_require:ramda
-cn = require 'classnames'
+{fmap, fmapObjIndexed} = require 'ramda-extras' #auto_require:ramda-extras
+{isNil, map, range, test} = require 'ramda' #auto_require:ramda
 
 # to move: react-coffee
 createComp = (f, name) ->
@@ -13,7 +12,7 @@ createComp = (f, name) ->
 		render: -> f @props, @context
 
 createComps = (connect, o) ->
-	ymapObjIndexed o, (f, k) ->
+	fmapObjIndexed o, (f, k) ->
 		comp = createComp f, k
 		if test /_$/, k then connect comp, k
 		else comp
@@ -53,8 +52,8 @@ renderUser = ({name, color, initials}) ->
 
 renderRating = (stars) ->
 	div {className: 'rat'},
-		ymap range(0, stars), -> '★'
-		ymap range(stars, 5), -> '☆'
+		fmap range(0, stars), -> '★'
+		fmap range(stars, 5), -> '☆'
 
 
 

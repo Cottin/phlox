@@ -1,5 +1,5 @@
-{assoc, contains, filter, find, isEmpty, isNil, join, keys, lift, map, merge, prop, remove, union, whereEq, without} = require 'ramda' #auto_require:ramda
-{cc, change, changedPaths, ymapObjIndexed, isThenable} = require 'ramda-extras'
+{contains, filter, find, isEmpty, isNil, keys, lift, map, merge, prop, union, whereEq} = require 'ramda' #auto_require:ramda
+{change, cc, changedPaths, fmapObjIndexed} = require 'ramda-extras' #auto_require:ramda-extras
 
 utils = require './utils'
 
@@ -152,11 +152,11 @@ class Phlox
 		@_dev_stateChanged?({data: @data, state: @state, viewModels: @viewModelState, queriers: @queriersState})
 
 	execQueries: (queriers) =>
-		ymapObjIndexed queriers, (q, k) =>
+		fmapObjIndexed queriers, (q, k) =>
 			res = @exec q, k, false
 
 	execInvokers: (invokers) =>
-		ymapObjIndexed invokers, (i, k) =>
+		fmapObjIndexed invokers, (i, k) =>
 			if ! isNil i 
 				res = @exec i, k, true
 

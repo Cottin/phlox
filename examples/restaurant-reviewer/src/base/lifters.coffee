@@ -1,12 +1,12 @@
-{F, compose, curry, filter, find, has, head, isEmpty, isNil, mean, merge, pluck, prop, reverse, sortBy, toLower, type, values, whereEq} = R = require 'ramda' #auto_require:ramda
-{cc, ymapObjIndexed, ymap} = require 'ramda-extras'
+{compose, curry, filter, find, has, head, isEmpty, isNil, mean, merge, pluck, prop, reverse, sortBy, toLower, type, values, whereEq} = R = require 'ramda' #auto_require:ramda
+{cc, fmap, fmapObjIndexed} = require 'ramda-extras' #auto_require:ramda-extras
 
 denorm = curry (data, o) ->
-	ymapObjIndexed o, (v, k) ->
+	fmapObjIndexed o, (v, k) ->
 		if ! has k, data then return v
 
 		if type(v) == 'Array'
-			return ymap (i) ->
+			return fmap (i) ->
 				if has i, data[k] then data[k][i]
 				else i
 
@@ -14,12 +14,12 @@ denorm = curry (data, o) ->
 		else v
 
 denormWithMappning = curry (data, mappings, o) ->
-	ymapObjIndexed o, (v, k) ->
+	fmapObjIndexed o, (v, k) ->
 		newData = mappings
 
 
 restaurantsSorted = ({ui: {sortBy}, restaurants}, {reviewItems}) ->
-	restaurants_ = ymapObjIndexed restaurants, (v, k) ->
+	restaurants_ = fmapObjIndexed restaurants, (v, k) ->
 		rs = cc filter(whereEq({restaurant: parseInt(k)})), values, reviewItems
 		stars = pluck 'stars', rs
 		avg = if isEmpty stars then 0 else Math.round(mean(stars) * 10) / 10
@@ -41,7 +41,7 @@ selectedRestaurant = ({ui: {selected}}, {restaurantsSorted}) ->
 
 reviewItems = ({reviews}, {}) ->
 	colors = ['#DAC48D', '#8DDA91', '#D78DDA', '#8DCEDA', '#F28E8E']
-	ymap reviews, (r) ->
+	fmap reviews, (r) ->
 		user =
 			name: r.user
 			initials: head r.user

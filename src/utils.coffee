@@ -1,5 +1,5 @@
-{any, contains, difference, differenceWith, evolve, has, intersectionWith, into, isEmpty, isNil, keys, map, mapObjIndexed, merge, none, test, toPairs, union, update, where, without} = require 'ramda' #auto_require:ramda
-{ymapObjIndexed, cc} = require 'ramda-extras'
+{contains, difference, differenceWith, evolve, innerJoin, isEmpty, isNil, keys, map, mapObjIndexed, merge, test, toPairs, union} = require 'ramda' #auto_require:ramda
+{cc} = require 'ramda-extras' #auto_require:ramda-extras
 
 # s, s -> b
 # Returns true if x is y or if x starts with y or if y starts with x
@@ -82,8 +82,8 @@ prepareViewModels = (vms, execIter) ->
 # Returns a list of dependencies of item that is found in dataPaths and
 # statePaths
 _affectedDeps = (item, dataPaths, statePaths) ->
-	dataPaths_ = intersectionWith sameDep, item.dataDeps, dataPaths
-	statePaths_ = intersectionWith sameDep, item.stateDeps, statePaths
+	dataPaths_ = innerJoin sameDep, item.dataDeps, dataPaths
+	statePaths_ = innerJoin sameDep, item.stateDeps, statePaths
 	return [dataPaths_, statePaths_]
 
 # Runs the lifters with supplied data paths that changed.
