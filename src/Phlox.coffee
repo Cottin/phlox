@@ -1,4 +1,4 @@
-{contains, filter, find, isEmpty, isNil, keys, lift, map, merge, prop, union, whereEq} = require 'ramda' #auto_require:ramda
+{contains, filter, find, isEmpty, isNil, join, keys, lift, map, merge, prop, union, whereEq} = require 'ramda' #auto_require:ramda
 {change, cc, changedPaths, fmapObjIndexed} = require 'ramda-extras' #auto_require:ramda-extras
 
 utils = require './utils'
