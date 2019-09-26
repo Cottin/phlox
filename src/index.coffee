@@ -1,6 +1,3 @@
-exports.Phlox = require './Phlox'
-exports.connect = require './connect'
-exports.PhloxProvider = require './PhloxProvider'
-exports.utils = require './publicUtils'
+createPhloxApp = require './createPhloxApp'
 
-
+module.exports = createPhloxApp
