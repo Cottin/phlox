@@ -6,7 +6,7 @@ qqq = (f) -> console.log match(/return (.*);/, f.toString())[1], JSON.stringify(
 _ = (...xs) -> xs
 
 # TODO: Move parseArguments out of popsiql
-popsiql = require '../../popsiql/src/popsiql'
+popsiql = require 'popsiql'
 
 PE = customError 'PhloxError'
 
