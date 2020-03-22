@@ -1,45 +1,59 @@
-assert = require 'assert'
-{invoker, keys, map, pick, type} = R = require 'ramda' # auto_require: ramda
-{} = RE = require 'ramda-extras' # auto_require: ramda-extras
-[ːkey, ːdebug, ːtype, ːdeps] = ['key', 'debug', 'type', 'deps'] #auto_sugar
-{fdeepEq_, throws} = RE = require 'testhelp' # auto_require: testhelp
+{invoker, map, match, pick, type} = R = require 'ramda' #auto_require: ramda
+{} = RE = require 'ramda-extras' #auto_require: ramda-extras
+[ːkey, ːdebug, ːdeps, ːtype] = ['key', 'debug', 'deps', 'type'] #auto_sugar
+qq = (f) -> console.log match(/return (.*);/, f.toString())[1], f()
+qqq = (f) -> console.log match(/return (.*);/, f.toString())[1], JSON.stringify(f(), null, 2)
+_ = (...xs) -> xs
+
+{fdeepEq, throws} = RE = require 'testhelp' # auto_require: testhelp
 
 {_prepare} = createPhloxApp = require './createPhloxApp'
 
 describe 'createPhloxApp', ->
-	describe.only '_prepare', ->
-		it 'no same keys', ->
-			throws /also exists/, ->
-				_prepare {ui: {a: 1}, queries: {a: 2}, lifters: {b: 2}, invokers: {c: 3}}
-			throws /exists twice/, ->
-				_prepare {ui: {a: 1}, queries: {c: 2}, lifters: {b: 2}, invokers: {c: 3}}
-
+	describe '_prepare', ->
 		f0 = () -> 1
 		fa = ({a}) -> 1
 		fabc = ({a}, {b}, {c}) -> 1
 		fb1 = ({}, {b: {b1}}) -> 1
 		fd = ({}, {d}) -> 1
 
-		it '1', ->
-			res = _prepare {ui: {a: 2}, queries: {b: f0, d: fabc}, lifters: {c: fa},
-			invokers: {e: fb1}}
+		it 'also exists', ->
+			throws /also exists/, ->
+				_prepare {ui: {a: 1}, queries: {a: 2}, lifters: {b: fa}, invokers: {c: fa}}
+		it 'exists twice', ->
+			throws /exists twice/, ->
+				_prepare {ui: {a: 1}, queries: {c: 2}, lifters: {b: fa}, invokers: {c: fa}}
 
-			fdeepEq_ map(pick([ːkey, ːtype, ːdeps]), res), [
-				{key: 'b', type: 'query', deps: {}},
+
+		it.only '1', ->
+			res = _prepare {ui: {a: 2}, queries: {b: f0, d: fabc}, lifters: {c: fa},
+			invokers: {e: fb1, f: f0}}
+
+			fdeepEq map(pick([ːkey, ːtype, ːdeps]), res[0]), [
 				{key: 'c', type: 'lifter', deps: {UI: {a: null}}},
 				{key: 'e', type: 'invoker', deps: {Data: {b: {b1: null}}}},
 				{key: 'd', type: 'query', deps: {UI: {a: null}, Data: {b: null}, State: {c: null}}},
+			]
+
+			fdeepEq map(pick([ːkey, ːtype, ːdeps]), res[1]), [
+				{key: 'b', type: 'query', deps: {}}
+			]
+
+			fdeepEq map(pick([ːkey, ːtype, ːdeps]), res[2]), [
+				{key: 'f', type: 'invoker', deps: {}}
 			]
 
 		it 'debug', ->
 			res = _prepare {ui: {a_debug: 2}, queries: {b_debug: f0, d: fabc}, lifters: {c_debug: fa},
 			invokers: {e_debug: fb1}}
 
-			fdeepEq_ map(pick([ːkey, ːdebug]), res), [
-				{key: 'b', debug: true},
+			fdeepEq map(pick([ːkey, ːdebug]), res[0]), [
 				{key: 'c', debug: true},
 				{key: 'e', debug: true},
 				{key: 'd', debug: false},
+			]
+			fdeepEq map(pick([ːkey, ːdebug]), res[1]), [
+				{key: 'b', debug: true},
 			]
 
 		it 'cannot resolve', ->

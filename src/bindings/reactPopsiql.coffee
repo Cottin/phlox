@@ -1,5 +1,5 @@
 {equals, isEmpty, isNil, join, match, merge, path, props, type} = R = require 'ramda' #auto_require: ramda
-{fmap, sf2} = RE = require 'ramda-extras' #auto_require: ramda-extras
+{fmap, fmapI, sf2} = RE = require 'ramda-extras' #auto_require: ramda-extras
 [] = [] #auto_sugar
 qq = (f) -> console.log match(/return (.*);/, f.toString())[1], f()
 qqq = (f) -> console.log match(/return (.*);/, f.toString())[1], JSON.stringify(f(), null, 2)
@@ -19,10 +19,11 @@ subSelectIfDEV = (dataQuery, data) ->
 		return subData
 	else return data
 
-module.exports = (React, app, report) ->
+module.exports = (React, app, ops, report) ->
 
 	# Save info to print on error (eg. error during render), that will otherwise not be printed because of error
 	reportStack = []
+	missings = {}
 	pushToReportStack = (o) ->
 		reportStack.unshift o
 		reportStack.length = Math.min 100, reportStack.length # don't let array too big
@@ -62,9 +63,7 @@ module.exports = (React, app, report) ->
 				setState merge {cacheCounter}, subSelectIfDEV dataQuery, data
 
 			unsub = app.sub dataQuery, handleChange, name
-			return ->
-				qq -> 'unsub'
-				unsub()
+			return -> unsub()
 
 		# https://github.com/facebook/react/issues/14476#issuecomment-471199055
 		# Note: we know dataQueries are small shallow objects anyway so JSON.stringify
@@ -100,25 +99,73 @@ module.exports = (React, app, report) ->
 		React.createElement 'pre', {style: {width: '100%'}}, sf2 data
 
 	_renderPreMissing = (name, missing, data) ->
+		# Not removing this so developer needs to refresh when this happens = good engough
+
+		# if !missings[name]
+		# 	div = document.createElement 'div'
+		# 	missings[name] = div
+		# 	document.body.appendChild div
+
+		# missDiv = missings[name]
+		# missDiv.style.position = 'absolute'
+		# missDiv.style.top = '10px'
+		# missDiv.style.left = '10px'
+		# missDiv.style.color = 'blue'
+		# missDiv.style.zIndex = 9999999999999
+		# missDiv.style.border = '2px solid red'
+		# missDiv.style.padding = '20px'
+		# missDiv.style.background = 'white'
+		# missDiv.style.display = 'flex'
+		# missDiv.style.flexDirection = 'column'
+
+		# d1 = document.createElement 'div'
+		# d1.textContent = "'#{name}' missing data!"
+		# missDiv.appendChild d1
+
+		# fmap missing, (ar) ->
+		# 	path = join '.', ar
+		# 	dp = document.createElement 'div'
+		# 	dp.textContent = path
+		# 	missDiv.appendChild dp
+
+		# pre = document.createElement 'pre'
+		# pre.style.width = '100%'
+		# pre.textContent = sf2 data
+		# missDiv.appendChild pre
+
+
 		React.createElement 'div', {style: {color: 'blue', position: 'absolute', top: 10, left: 10,
 		zIndex: 999999999, border: '2px solid red', padding: 20, background: 'white'}},
 			React.createElement 'div', {style: {color: 'red', fontSize: 20}}, "'#{name}' missing data!"
-			fmap missing, (ar) ->
+			fmapI missing, (ar, idx) ->
 				path = join '.', ar
-				React.createElement 'div', {key: path, style: {color: 'red', fontSize: 12}}, path
+				React.createElement 'div', {key: idx, style: {color: 'red', fontSize: 12}}, path
 
 			React.createElement 'div', {}, 'Result from VM:'
 			_renderPre data
 
+	_renderPreMissingOps = (name, missing) ->
+		React.createElement 'div', {style: {color: 'blue', position: 'absolute', top: 10, left: 10,
+		zIndex: 999999999, border: '2px solid red', padding: 20, background: 'white'}},
+			React.createElement 'div', {style: {color: 'red', fontSize: 20}}, "'#{name}' missing operations!"
+			fmap missing, (ar) ->
+				path = join '.', ar
+				React.createElement 'div', {key: path, style: {color: 'red', fontSize: 12}}, path
+
 	comp = (name, vm, deps, renderF) ->
 		if !deps.VM then throw new Error "Missing VM deps in comp #{name}"
-		{UI, Data, State, VM} = popsiql.utils.toDataQuery deps
+		{UI, Data, State, VM, Ops} = popsiql.utils.toDataQuery deps
 		dataQuery = {UI, Data, State}
+
+		if DEV && Ops
+			[missingOps, vmOps] = popsiql.utils.subSelect Ops, ops
+
 
 		lastCacheCounter = -1
 		prev = null
 		return (props) ->
 			res = useData dataQuery, name
+
 
 			# TODO: GÖR PROXY FÖR VM SÅ MAN SER OM MAN ACCESSAR NÅGON MAN INTE FRÅGADE EFTER
 
@@ -140,6 +187,9 @@ module.exports = (React, app, report) ->
 				prev = tempPrev
 				return ->
 
+			if missingOps && !isEmpty missingOps
+				return _renderPreMissingOps name, missingOps
+
 			# TODO: turn this on 
 			dataToRender = vmRes
 			reportStack.push {name, dataForVM, dataToRender}
@@ -149,7 +199,14 @@ module.exports = (React, app, report) ->
 
 				if !isEmpty(missing) && vmRes.loading != true
 					return _renderPreMissing name, missing, vmRes
+				# else if missings[name]
+				# 	document.body.removeChild missings[name]
+				# 	delete missings[name]
 
+			if Ops
+				if DEV then dataToRender.Ops = vmOps
+				else dataToRender.Ops = ops
+				
 			rf0 = performance.now()
 			renderRes = renderF dataToRender
 			time.rf = performance.now() - rf0

@@ -1,4 +1,4 @@
-{has, invoker, isEmpty, map, match, merge, partition, pick, reject, replace, type, values, whereEq, without} = R = require 'ramda' #auto_require: ramda
+{always, find, has, invoker, isEmpty, map, match, merge, partition, pick, reject, replace, type, values, whereEq, without} = R = require 'ramda' #auto_require: ramda
 {change, isAffected, func, freduceO, $, isNilOrEmpty, sf0, customError} = RE = require 'ramda-extras' #auto_require: ramda-extras
 [] = [] #auto_sugar
 qq = (f) -> console.log match(/return (.*);/, f.toString())[1], f()
@@ -32,14 +32,14 @@ class Phlox
 		@state = {}
 		@data = {}
 
-		[qli, noDepQueries] = _prepare {ui, queries, lifters, invokers}
+		[qli, @noDepQueries, @noDepInvokers] = _prepare {ui, queries, lifters, invokers}
 		[i, ql] = partition whereEq({type: 'invoker'}), qli
 		@queriesAndLifters = ql
 		@invokers = i
 		@listeners = []
 		# TODO: try resolve q/l/i into listeners !!
 
-		window.setTimeout (=> @_runNoDepQueries noDepQueries), 50
+		window.setTimeout (=> @_runNoDepQueriesAndLifters()), 50
 
 		# @initialUI = ui
 		# @initialData = data
@@ -53,6 +53,7 @@ class Phlox
 
 		@setCount = 0
 		@flushCount = 0
+		@isBlocked = false
 
 		# @_flush() # initial flush
 		window.requestAnimationFrame @_flush
@@ -88,13 +89,39 @@ class Phlox
 	# getUDS: () -> return [{UI: @ui, Data: @data, State: @state}, @commitHistory.length]
 	getUDS: () -> return {UI: @ui, Data: @data, State: @state}
 
+	block: () -> @isBlocked = true
+	unblock: () -> @isBlocked = false
 
-	_setData: (key) -> (delta) =>
+	reset: (ui) ->
+		# NOTE: not sure if this is a correct = full reset
+
+		if !ui then throw new PE "initial ui needs to be an object, not #{ui}"
+		# reset data
+		for k,d of @data
+			@_setData k, undefined
+
+		# figure out the total delta needed for the reset
+		totalDelta = {}
+		for k, v of @ui
+			if ui[k] then totalDelta[k] = ui[k]
+			else totalDelta[k] = undefined
+
+		@setUI totalDelta
+
+		# re-run queries and lifters without dependencies
+		window.setTimeout (=>@_runNoDepQueriesAndLifters()), 50
+
+
+
+
+	_setData: (key) -> (data) =>
 		@setCount = @setCount + 1
 		undo = {}
+		delta = {[key]: always data}
 		@data = change.meta delta, @data, undo, @dataChanges
 
 	_flush: =>
+		if @isBlocked then return window.requestAnimationFrame @_flush
 		if @flushCount > 0 && isEmpty(@uiChanges) && isEmpty(@dataChanges) then return window.requestAnimationFrame @_flush
 
 		# RUN
@@ -122,6 +149,7 @@ class Phlox
 		time.ql = performance.now() - ql0
 
 		@data = change dataChanges, @data
+		@state = state
 
 		time.r = performance.now() - r0
 		# @config.report {ts: r0, name: 'run', uiChanges, dataChanges, stateChanges, setCount, time}
@@ -130,6 +158,10 @@ class Phlox
 		# 	@commitHistory.push {UI: uiChanges, Data: dataChanges, State: stateChanges}
 		# else @commitHistory.push {UI: uiChanges, Data: dataChanges, State: stateChanges}
 
+		i0 = performance.now()
+		affectedInvokers = @_runInvokers ui, data, state, uiChanges, dataChanges, stateChanges
+		time.i = performance.now() - i0
+
 		# LISTENERS
 		l0 = performance.now()
 		affectedListeners = @_runListeners ui, data, state, uiChanges, dataChanges, stateChanges
@@ -137,7 +169,7 @@ class Phlox
 		time.tot = performance.now() - r0
 
 		@config.report {ts: r0, name: 'flush-end', uiChanges, dataChangesBefore, dataChanges, stateChanges,
-		setCount, time, affected: merge affected, {listeners: affectedListeners}}
+		setCount, time, affected: merge affected, {invokers: affectedInvokers, listeners: affectedListeners}}
 
 		@flushCount++
 
@@ -161,11 +193,19 @@ class Phlox
 						data = change.meta {[x.key]: clientRes}, data, {}, dataChanges
 				else
 					affected.lifters.push x.key
-					lifterRes = @config.runLifter x, {data, state}
+					lifterRes = @config.runLifter x, {UI: ui, Data: data, State: state}
 					if lifterRes != undefined
 						state = change.meta {[x.key]: lifterRes}, state, {}, stateChanges
 
 		return [data, dataChanges, state, stateChanges, affected]
+
+	_runInvokers: (ui, data, state, uiChanges, dataChanges, stateChanges) ->
+		affected = []
+		for i in @invokers
+			if isAffected i.deps, {UI: uiChanges, Data: dataChanges, State: stateChanges}
+				@config.runInvoker i, {UI: ui, Data: data, State: state}
+				affected.push i
+		return affected
 
 	_runListeners: (ui, data, state, uiChanges, dataChanges, stateChanges) ->
 		state = @state
@@ -176,12 +216,17 @@ class Phlox
 				affected.push l
 		return affected
 
-	_runNoDepQueries: (noDepQueries) ->
-		for q in noDepQueries # run queries without dependencies
+	_runNoDepQueriesAndLifters: () ->
+		console.log @
+		for q in @noDepQueries # run queries without dependencies
 			# optimization: do this async instead to improve time to first paint
 			clientRes = @config.runQuery q, {UI: {}, Data: {}, State: {}}, @_setData q.key
 			if clientRes != undefined
 				@_setData q.key, clientRes
+
+		for i in @noDepInvokers # run invokers without dependencies
+			# optimization: do this async instead to improve time to first paint
+			@config.runInvoker i, {UI: {}, Data: {}, State: {}}
 
 
 
@@ -202,6 +247,7 @@ _areResolved = (deps, resMap, level = 0) ->
 _prepare = ({ui, queries, lifters, invokers}) ->
 	toResolve = {}
 	noDepQueries = []
+	noDepInvokers = []
 
 	# remove debug from ui
 	ui = $ ui, freduceO {}, (acc, v, k) -> merge acc, {[replace /_debug$/, '', k]: v}
@@ -210,25 +256,31 @@ _prepare = ({ui, queries, lifters, invokers}) ->
 		key = replace /_debug$/, '', k
 		[UI, Data, State] = popsiql.utils.parseArguments f.toString()
 		if has k, ui then throw new PE "#{type} '#{key}' also exists in initial ui, pick a unique key"
-		if has k, toResolve then throw new PE "'#{key}' exists twice in queries/lifters/invokers"
+		if has(k, toResolve) || find(whereEq({key}), noDepQueries)
+			throw new PE "'#{key}' exists twice in queries/lifters/invokers"
 		qli = {type, key, f, debug: key != k, deps: reject isNilOrEmpty, {UI, Data, State}}
 		if isEmpty qli.deps
-			if type == 'lifter' || type == 'invoker' then throw new PE "#{type}/#{k} is missing dependencies"
+			if type == 'lifter' then throw new PE "#{type}/#{k} is missing dependencies"
 		return qli
 
+	resMap = {UI: ui, Data: {}, State: {}}
+
 	for k,f of queries
-		res = _toQLI 'query', k, f
-		if isEmpty res.deps then noDepQueries.push res
-		else toResolve[res.key] = res
+		qli = _toQLI 'query', k, f
+		if isEmpty qli.deps
+			noDepQueries.push qli
+			resMap.Data[qli.key] = 1
+		else toResolve[qli.key] = qli
 	for k,f of lifters
-		res = _toQLI 'lifter', k, f
-		toResolve[res.key] = res
+		qli = _toQLI 'lifter', k, f
+		toResolve[qli.key] = qli
 	for k,f of invokers
-		res = _toQLI 'invoker', k, f
-		toResolve[res.key] = res
+		qli = _toQLI 'invoker', k, f
+		if isEmpty qli.deps
+			noDepInvokers.push qli
+		else toResolve[qli.key] = qli
 
 	res = []
-	resMap = {UI: ui, Data: {}, State: {}}
 
 	lap = 0
 	while !isEmpty toResolve
@@ -252,9 +304,10 @@ _prepare = ({ui, queries, lifters, invokers}) ->
 			delete toResolve[d]
 
 		if lap++ > 20
+			console.error toResolve
 			throw new PE "cannot resolve: #{sf0 values $ toResolve, map ({type, key}) -> type+'/'+key}"
 
-	return [res, noDepQueries]
+	return [res, noDepQueries, noDepInvokers]
 
 module.exports._prepare = _prepare
 
