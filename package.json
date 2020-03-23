@@ -1,12 +1,12 @@
 {
   "name": "phlox",
-  "version": "0.1.23",
+  "version": "0.1.24",
   "description": "A frontend architecture that's easy to visualize",
-  "main": "lib/index.js",
+  "main": "index.js",
   "scripts": {
     "test": "mocha 'src/**/test*.coffee' --watch --compilers coffee:coffeescript/register --transpile --slow 1",
-    "clean": "rimraf lib",
-    "build": "coffee -o lib/ -c src/",
+    "clean": "rimraf *.js && rimraf bindings",
+    "build": "coffee -o ./ -c src/",
     "dist": "npm run clean && npm run build"
   },
   "repository": {
