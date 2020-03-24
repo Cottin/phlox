@@ -172,11 +172,11 @@ module.exports = (React, app, ops, report) ->
 			time = {}
 			t0 = performance.now()
 
-			dataForVM = _ res.UI, res.Data, res.State
-
+			dataForVMarr = _ res.UI, res.Data, res.State
+			dataForVM = {UI: res.UI, Data: res.Data, State: res.State}
 
 			vm0 = performance.now()
-			vmRes = vm dataForVM..., prev
+			vmRes = vm dataForVMarr..., prev
 			time.vm = performance.now() - vm0
 			tempPrev = {UI: res.UI, Data: res.Data, State: res.State, VM: vmRes}
 
