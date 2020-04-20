@@ -1,6 +1,6 @@
 {
   "name": "phlox",
-  "version": "0.1.28",
+  "version": "0.1.29",
   "description": "A frontend architecture that's easy to visualize",
   "main": "index.js",
   "scripts": {

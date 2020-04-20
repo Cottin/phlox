@@ -55,8 +55,8 @@ class Phlox
 		@flushCount = 0
 		@isBlocked = false
 
-		# @_flush() # initial flush
-		window.requestAnimationFrame @_flush
+		@_flush() # initial flush
+		# window.requestAnimationFrame @_flush
 
 
 
@@ -64,6 +64,7 @@ class Phlox
 		@setCount = @setCount + 1
 		undo = {}
 		@ui = change.meta delta, @ui, undo, @uiChanges
+		@_flush()
 		# optimization 0: use changeM instead, reasoning: if views for some reason rerenders before flush, they'll partially get some new data, no problem with that?
 		# optimization 1: call data-only dependencies before flush (requires rethink of viewModels)
 		# optimization 2: move flush to WebWorker
@@ -119,10 +120,12 @@ class Phlox
 		undo = {}
 		delta = {[key]: always data}
 		@data = change.meta delta, @data, undo, @dataChanges
+		@_flush()
 
 	_flush: =>
 		if @isBlocked then return window.requestAnimationFrame @_flush
-		if @flushCount > 0 && isEmpty(@uiChanges) && isEmpty(@dataChanges) then return window.requestAnimationFrame @_flush
+		# if @flushCount > 0 && isEmpty(@uiChanges) && isEmpty(@dataChanges) then return window.requestAnimationFrame @_flush
+		if @flushCount > 0 && isEmpty(@uiChanges) && isEmpty(@dataChanges) then return
 
 		# RUN
 		setCount = @setCount
