@@ -1,4 +1,4 @@
-{equals, isEmpty, isNil, join, match, merge, path, props, type} = R = require 'ramda' #auto_require: ramda
+{equals, has, isEmpty, isNil, join, match, merge, path, prop, props, split, tail, test, type} = R = require 'ramda' #auto_require: ramda
 {fmap, fmapI, sf2} = RE = require 'ramda-extras' #auto_require: ramda-extras
 [] = [] #auto_sugar
 qq = (f) -> console.log match(/return (.*);/, f.toString())[1], f()
@@ -152,6 +152,12 @@ module.exports = (React, app, ops, report) ->
 				path = join '.', ar
 				React.createElement 'div', {key: path, style: {color: 'red', fontSize: 12}}, path
 
+	_renderPreVMAccess = (path) ->
+		React.createElement 'div', {style: {color: 'blue', position: 'absolute', top: 10, left: 10,
+		zIndex: 999999999, border: '2px solid red', padding: 20, background: 'white'}},
+			React.createElement 'div', {style: {color: 'red', fontSize: 20}}, "Missing VM-dependency"
+			React.createElement 'div', {style: {color: 'red', fontSize: 12}}, "vm.#{path}"
+
 	comp = (name, vm, deps, renderF) ->
 		if !deps.VM then throw new Error "Missing VM deps in comp #{name}"
 		{UI, Data, State, VM, Ops} = popsiql.utils.toDataQuery deps
@@ -207,8 +213,31 @@ module.exports = (React, app, ops, report) ->
 				if DEV then dataToRender.Ops = vmOps
 				else dataToRender.Ops = ops
 				
+			if DEV
+				VMandOps = merge VM, {Ops: vmOps}
+				pathInVM = (path, o) ->
+					if isEmpty path then return true
+					else if test /@@/, path[0] then return true # workaround for: vm.records.@@functional/placeholder
+					else if has path[0], o then pathInVM tail(path), o[path[0]]
+					else if has path[0]+'〳', o then pathInVM tail(path), o[path[0]+'〳']
+					else false
+
+				dataToRenderOriginal = dataToRender
+				getHandler =
+					get: (o, prop, path) ->
+						if ! pathInVM split('.', path), VMandOps
+							throw new Error "vm.#{path} VM-dep"
+						return o[prop]
+				dataToRender = RE.recursiveProxy dataToRender, getHandler
+
 			rf0 = performance.now()
-			renderRes = renderF dataToRender
+			try
+				renderRes = renderF dataToRender
+			catch err
+				[isMatch, path] = match /vm\.(.*?) VM-dep/, err.message
+				if isMatch then return _renderPreVMAccess path
+				else throw err
+
 			time.rf = performance.now() - rf0
 
 			return renderRes

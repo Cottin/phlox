@@ -1,4 +1,4 @@
-{always, find, has, invoker, isEmpty, map, match, merge, partition, pick, reject, replace, type, values, whereEq, without} = R = require 'ramda' #auto_require: ramda
+{always, curry, find, has, invoker, isEmpty, map, match, merge, partition, pick, reject, replace, type, values, whereEq, without} = R = require 'ramda' #auto_require: ramda
 {change, isAffected, func, freduceO, $, isNilOrEmpty, sf0, customError} = RE = require 'ramda-extras' #auto_require: ramda-extras
 [] = [] #auto_sugar
 qq = (f) -> console.log match(/return (.*);/, f.toString())[1], f()
@@ -55,16 +55,16 @@ class Phlox
 		@flushCount = 0
 		@isBlocked = false
 
-		@_flush() # initial flush
-		# window.requestAnimationFrame @_flush
+		# @_flush() # initial flush
+		window.requestAnimationFrame @_flush
 
 
 
-	setUI: (delta) ->
+	setUI: curry (delta, forceFlush=false) ->
 		@setCount = @setCount + 1
 		undo = {}
 		@ui = change.meta delta, @ui, undo, @uiChanges
-		@_flush()
+		if forceFlush then @_flush()
 		# optimization 0: use changeM instead, reasoning: if views for some reason rerenders before flush, they'll partially get some new data, no problem with that?
 		# optimization 1: call data-only dependencies before flush (requires rethink of viewModels)
 		# optimization 2: move flush to WebWorker
@@ -115,17 +115,17 @@ class Phlox
 
 
 
-	_setData: (key) -> (data) =>
+	_setData: (key) -> curry (data, forceFlush=false) =>
 		@setCount = @setCount + 1
 		undo = {}
 		delta = {[key]: always data}
 		@data = change.meta delta, @data, undo, @dataChanges
-		@_flush()
+		if forceFlush then @_flush()
 
 	_flush: =>
 		if @isBlocked then return window.requestAnimationFrame @_flush
-		# if @flushCount > 0 && isEmpty(@uiChanges) && isEmpty(@dataChanges) then return window.requestAnimationFrame @_flush
-		if @flushCount > 0 && isEmpty(@uiChanges) && isEmpty(@dataChanges) then return
+		if @flushCount > 0 && isEmpty(@uiChanges) && isEmpty(@dataChanges) then return window.requestAnimationFrame @_flush
+		# if @flushCount > 0 && isEmpty(@uiChanges) && isEmpty(@dataChanges) then return
 
 		# RUN
 		setCount = @setCount

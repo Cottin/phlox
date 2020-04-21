@@ -1,6 +1,6 @@
 {
   "name": "phlox",
-  "version": "0.1.29",
+  "version": "0.1.30",
   "description": "A frontend architecture that's easy to visualize",
   "main": "index.js",
   "scripts": {
@@ -28,7 +28,7 @@
     "lodash.debounce": "^4.0.8",
     "popsiql": ">0.2.3",
     "ramda": ">0.25.0",
-    "ramda-extras": ">0.4.9"
+    "ramda-extras": "^0.4.16"
   },
   "devDependencies": {
     "babel-core": "^6.3.15",
