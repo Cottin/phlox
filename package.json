@@ -9,8 +9,8 @@
     "build": "coffee -o ./ -c src/",
     "dist": "npm run clean && npm run build && npm run sedjs",
     "pub": "npm run dist && npm publish && npm run clean && npm run sedcoffee",
-    "sedjs": "sed -i '' -e 's/ramda-extras.coffee\"/ramda-extras.js\"/g' ./package.json",
-    "sedcoffee": "sed -i '' -e 's/ramda-extras.js\"/ramda-extras.coffee\"/g' ./package.json"
+    "sedjs": "sed -i '' -e 's/index.coffee\"/index.js\"/g' ./package.json",
+    "sedcoffee": "sed -i '' -e 's/index.js\"/index.coffee\"/g' ./package.json"
   },
   "repository": {
     "type": "git",
