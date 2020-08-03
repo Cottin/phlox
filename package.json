@@ -1,6 +1,6 @@
 {
   "name": "phlox",
-  "version": "0.1.31",
+  "version": "0.1.32",
   "description": "A frontend architecture that's easy to visualize",
   "main": "src/index.coffee",
   "scripts": {
@@ -9,8 +9,8 @@
     "build": "coffee -o ./ -c src/",
     "dist": "npm run clean && npm run build && npm run sedjs",
     "pub": "npm run dist && npm publish && npm run clean && npm run sedcoffee",
-    "sedjs": "sed -i '' -e 's/index.coffee\"/index.js\"/g' ./package.json",
-    "sedcoffee": "sed -i '' -e 's/index.js\"/index.coffee\"/g' ./package.json"
+    "sedjs": "sed -i '' -e 's/src\\\/index.coffee\"/index.js\"/g' ./package.json",
+    "sedcoffee": "sed -i '' -e 's/index.js\"/src\\\/index.coffee\"/g' ./package.json"
   },
   "repository": {
     "type": "git",
