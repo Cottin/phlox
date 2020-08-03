@@ -1,5 +1,5 @@
-{always, curry, find, has, invoker, isEmpty, map, match, merge, partition, pick, reject, replace, type, values, whereEq, without} = R = require 'ramda' #auto_require: ramda
-{change, isAffected, func, freduceO, $, isNilOrEmpty, sf0, customError} = RE = require 'ramda-extras' #auto_require: ramda-extras
+always = require('ramda/es/always').default; curry = require('ramda/es/curry').default; find = require('ramda/es/find').default; flip = require('ramda/es/flip').default; has = require('ramda/es/has').default; invoker = require('ramda/es/invoker').default; isEmpty = require('ramda/es/isEmpty').default; map = require('ramda/es/map').default; match = require('ramda/es/match').default; merge = require('ramda/es/merge').default; partition = require('ramda/es/partition').default; pick = require('ramda/es/pick').default; reject = require('ramda/es/reject').default; replace = require('ramda/es/replace').default; type = require('ramda/es/type').default; values = require('ramda/es/values').default; whereEq = require('ramda/es/whereEq').default; without = require('ramda/es/without').default; #auto_require: srcramda
+{change, reduceO, isAffected, func, $, isNilOrEmpty, sf0, customError} = RE = require 'ramda-extras' #auto_require: ramda-extras
 [] = [] #auto_sugar
 qq = (f) -> console.log match(/return (.*);/, f.toString())[1], f()
 qqq = (f) -> console.log match(/return (.*);/, f.toString())[1], JSON.stringify(f(), null, 2)
@@ -220,7 +220,6 @@ class Phlox
 		return affected
 
 	_runNoDepQueriesAndLifters: () ->
-		console.log @
 		for q in @noDepQueries # run queries without dependencies
 			# optimization: do this async instead to improve time to first paint
 			clientRes = @config.runQuery q, {UI: {}, Data: {}, State: {}}, @_setData q.key
@@ -253,7 +252,7 @@ _prepare = ({ui, queries, lifters, invokers}) ->
 	noDepInvokers = []
 
 	# remove debug from ui
-	ui = $ ui, freduceO {}, (acc, v, k) -> merge acc, {[replace /_debug$/, '', k]: v}
+	ui = $ ui, flip(reduceO) {}, (acc, v, k) -> merge acc, {[replace /_debug$/, '', k]: v}
 
 	_toQLI = (type, k, f) ->
 		key = replace /_debug$/, '', k

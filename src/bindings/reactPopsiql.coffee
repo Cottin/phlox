@@ -1,9 +1,8 @@
-{equals, has, isEmpty, isNil, join, match, merge, path, prop, props, split, tail, test, type} = R = require 'ramda' #auto_require: ramda
-{fmap, fmapI, sf2} = RE = require 'ramda-extras' #auto_require: ramda-extras
+equals = require('ramda/src/equals'); has = require('ramda/src/has'); isEmpty = require('ramda/src/isEmpty'); isNil = require('ramda/src/isNil'); join = require('ramda/src/join'); map = require('ramda/src/map'); match = require('ramda/src/match'); merge = require('ramda/src/merge'); path = require('ramda/src/path'); prop = require('ramda/src/prop'); props = require('ramda/src/props'); split = require('ramda/src/split'); tail = require('ramda/src/tail'); test = require('ramda/src/test'); type = require('ramda/src/type'); #auto_require: srcramda
+{mapI, $, sf2} = RE = require 'ramda-extras' #auto_require: ramda-extras
 [] = [] #auto_sugar
 qq = (f) -> console.log match(/return (.*);/, f.toString())[1], f()
 qqq = (f) -> console.log match(/return (.*);/, f.toString())[1], JSON.stringify(f(), null, 2)
-_ = (...xs) -> xs
 _ = (...xs) -> xs
 
 popsiql = require 'popsiql'
@@ -137,7 +136,7 @@ module.exports = (React, app, ops, report) ->
 		React.createElement 'div', {style: {color: 'blue', position: 'absolute', top: 10, left: 10,
 		zIndex: 999999999, border: '2px solid red', padding: 20, background: 'white'}},
 			React.createElement 'div', {style: {color: 'red', fontSize: 20}}, "'#{name}' missing data!"
-			fmapI missing, (ar, idx) ->
+			$ missing, mapI (ar, idx) ->
 				path = join '.', ar
 				React.createElement 'div', {key: idx, style: {color: 'red', fontSize: 12}}, path
 
@@ -148,7 +147,7 @@ module.exports = (React, app, ops, report) ->
 		React.createElement 'div', {style: {color: 'blue', position: 'absolute', top: 10, left: 10,
 		zIndex: 999999999, border: '2px solid red', padding: 20, background: 'white'}},
 			React.createElement 'div', {style: {color: 'red', fontSize: 20}}, "'#{name}' missing operations!"
-			fmap missing, (ar) ->
+			$ missing, map (ar) ->
 				path = join '.', ar
 				React.createElement 'div', {key: path, style: {color: 'red', fontSize: 12}}, path
 
@@ -213,6 +212,8 @@ module.exports = (React, app, ops, report) ->
 				if DEV then dataToRender.Ops = vmOps
 				else dataToRender.Ops = ops
 				
+			errorCount = 0
+
 			if DEV
 				VMandOps = merge VM, {Ops: vmOps}
 				pathInVM = (path, o) ->
